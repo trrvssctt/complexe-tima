@@ -1,0 +1,64 @@
+SKU;Produit;Marque;Catégorie;Sous-catégorie;Variantes;Prix achat HT;Prix vente;Stock initial;Seuil alerte;Photos;Confiance;Remarque
+CT-SCO-001;Cahier Travaux Pratiques grand format;Monila (à confirmer);Fournitures scolaires & bureau;Cahiers;Bleu, Rouge, Jaune, Vert;;;;20;1, 7;Sûr;Format et nombre de pages à confirmer
+CT-SCO-002;Cahier grand format couverture plastique « Collège »;Monila / College (à confirmer);Fournitures scolaires & bureau;Cahiers;Bleu, Rouge, Jaune, Vert;;;;20;1, 2, 3, 7;Sûr;Nombre de pages à confirmer
+CT-SCO-003;Cahier petit format (lot);;Fournitures scolaires & bureau;Cahiers;Assortiment couleurs;;;;20;1, 3;À confirmer;Vendu à l'unité ou en lot ? Nombre de pages ?
+CT-SCO-004;Cahier illustré enfant;;Fournitures scolaires & bureau;Cahiers;Couvertures illustrées;;;;10;1, 3;À confirmer;Cahier de dessin ou cahier d'écriture ?
+CT-SCO-005;Rame de papier A4 80 g;Double A;Fournitures scolaires & bureau;Papier & papeterie;;;;;5;6;Sûr;Rame de 500 feuilles
+CT-SCO-006;Pochette papier dessin;Canson;Fournitures scolaires & bureau;Papier & papeterie;;;;;5;3;Sûr;Format (24x32 ?) et grammage à confirmer
+CT-SCO-007;Bloc de feuilles;;Fournitures scolaires & bureau;Papier & papeterie;;;;;5;3;À confirmer;Bloc visible au centre de l'étagère, référence exacte à confirmer
+CT-SCO-008;Feuillets adhésifs repositionnables;;Fournitures scolaires & bureau;Papier & papeterie;Assortiment couleurs;;;;10;1, 3;À confirmer;
+CT-SCO-009;Feuilles de carton kraft;;Fournitures scolaires & bureau;Papier & papeterie;;;;;5;3;À confirmer;
+CT-SCO-010;Rouleau de papier blanc;;Fournitures scolaires & bureau;Papier & papeterie;;;;;3;1;À confirmer;Rouleau en bas à droite : papier ou nappe ?
+CT-SCO-011;Stylo correcteur;;Fournitures scolaires & bureau;Écriture & correction;;;;;10;1, 3, 6;Sûr;Marque à confirmer
+CT-SCO-012;Surligneurs;;Fournitures scolaires & bureau;Écriture & correction;Assortiment couleurs;;;;10;1, 6;Sûr;Vendus à l'unité ou par pochette ?
+CT-SCO-013;Stylos à bille (boîte);;Fournitures scolaires & bureau;Écriture & correction;Bleu, Noir, Rouge;;;;10;6;À confirmer;
+CT-SCO-014;Gomme;;Fournitures scolaires & bureau;Écriture & correction;;;;;10;1, 3;À confirmer;
+CT-SCO-015;Crayons de couleur Color'Peps (boîte);Maped;Fournitures scolaires & bureau;Dessin & coloriage;12 et 24 couleurs (à confirmer);;;;5;1, 3;Sûr;
+CT-SCO-016;Crayons de couleur / feutres;Giotto;Fournitures scolaires & bureau;Dessin & coloriage;;;;;5;6;À confirmer;Crayons ou feutres ?
+CT-SCO-017;Kit de géométrie (compas, règle, équerre);;Fournitures scolaires & bureau;Dessin & coloriage;;;;;5;6;Sûr;
+CT-SCO-018;Trousse scolaire;;Fournitures scolaires & bureau;Trousses & rangement;Rose, motifs groupe musical;;;;5;1, 3;Sûr;
+CT-SCO-019;Syllabaire « Mamadou et Bineta » (nouvelle édition);;Fournitures scolaires & bureau;Manuels scolaires;;;;;3;1, 3;Sûr;
+CT-SCO-020;Manuel de mathématiques (édition 2026);;Fournitures scolaires & bureau;Manuels scolaires;;;;;3;1, 4;À confirmer;Niveau / classe à confirmer
+CT-SCO-021;Manuels et livres illustrés divers;;Fournitures scolaires & bureau;Manuels scolaires;;;;;3;3;À confirmer;Lister les titres un par un
+CT-SCO-022;Craies blanches (boîte);;Fournitures scolaires & bureau;Matériel de classe;;;;;5;3;Sûr;Marque à confirmer
+CT-SCO-023;Craies de couleur (boîte);;Fournitures scolaires & bureau;Matériel de classe;;;;;5;3;À confirmer;
+CT-INF-001;Clavier filaire USB KB216;Dell;Informatique & électrique;Périphériques;;;;;2;1, 3;Sûr;
+CT-INF-002;Souris optique filaire;Dell;Informatique & électrique;Périphériques;;;;;2;1, 3;Sûr;
+CT-INF-003;Multiprise verticale;;Informatique & électrique;Multiprises & rallonges;;;;;3;3, 7;Sûr;Nombre de prises et marque à confirmer
+CT-INF-004;Multiprise 5 prises avec interrupteur;;Informatique & électrique;Multiprises & rallonges;;;;;3;3;À confirmer;
+CT-INF-005;Rallonge électrique;;Informatique & électrique;Multiprises & rallonges;;;;;3;3;À confirmer;Longueur à confirmer
+CT-INF-006;Ruban adhésif double face Nano Tape;;Informatique & électrique;Petits accessoires;;;;;5;3;Sûr;
+CT-BEA-001;Coloration cheveux Citation;Citation;Beauté & soins;Soins capillaires;Teintes à lister;;;;5;1, 3, 7;Sûr;
+CT-BEA-002;Spray capillaire parfumé (flacon noir);(à confirmer);Beauté & soins;Soins capillaires;;;;;5;8, 9, 10;À confirmer;Flacons noirs à pompe sur l'étagère du haut
+CT-BEA-003;Crème / masque capillaire (pot);;Beauté & soins;Soins capillaires;;;;;5;8, 9;À confirmer;Pot vert
+CT-BEA-004;Peignes / accessoires cheveux;;Beauté & soins;Soins capillaires;;;;;5;7;À confirmer;
+CT-BEA-005;Lait corporel Nova;Nova (à confirmer);Beauté & soins;Soins du corps;;;;;5;8, 9, 10;À confirmer;Flacon jaune
+CT-BEA-006;Lait corporel Coco;Hydralux;Beauté & soins;Soins du corps;;;;;5;8, 10;Sûr;
+CT-BEA-007;Lait de beauté Skin Net;(à confirmer);Beauté & soins;Soins du corps;;;;;5;8;À confirmer;
+CT-BEA-008;Lotion corporelle Familia;(à confirmer);Beauté & soins;Soins du corps;;;;;5;8, 9;À confirmer;
+CT-BEA-009;Soin homme « MEN Perfect Day »;(à confirmer);Beauté & soins;Soins du corps;;;;;5;8, 9;À confirmer;Gel douche ou lotion ?
+CT-BEA-010;Huile corporelle (flacon ambré);;Beauté & soins;Soins du corps;;;;;3;8;À confirmer;
+CT-BEA-011;Déodorant spray;Dove;Beauté & soins;Déodorants & brumes;Parfums à lister;;;;5;8, 9;Sûr;
+CT-BEA-012;Brume parfumée Love Me;(à confirmer);Beauté & soins;Déodorants & brumes;;;;;5;8, 9;À confirmer;
+CT-BEA-013;Déodorant spray homme;;Beauté & soins;Déodorants & brumes;;;;;5;8;À confirmer;
+CT-BEA-014;Coffret « Style » (rouge à lèvres ou vernis);;Beauté & soins;Maquillage & ongles;;;;;3;8, 9;À confirmer;Contenu exact à confirmer
+CT-BEA-015;Brosses à dents Pro Complete (lot);(à confirmer);Beauté & soins;Hygiène;;;;;5;6, 7;À confirmer;
+CT-BEA-016;Masques jetables 3 plis (boîte);;Beauté & soins;Hygiène;;;;;3;6;Sûr;Nombre par boîte à confirmer
+CT-PAR-001;Parfum Ameer Al Oudh;(à confirmer);Parfumerie & encens;Parfums;;;;;3;4, 5;Sûr;
+CT-PAR-002;Huile parfumée (petit flacon);;Parfumerie & encens;Parfums;Senteurs à lister;;;;5;5;À confirmer;
+CT-PAR-003;Coffret parfum oriental;;Parfumerie & encens;Parfums;;;;;3;5;À confirmer;Boîte rouge et blanche
+CT-PAR-004;Charbon pour encens Al Shu'la;Al Shu'la;Parfumerie & encens;Encens & charbon;;;;;5;4, 5;Sûr;
+CT-PAR-005;Brûle-encens doré;;Parfumerie & encens;Brûle-encens;;;;;2;5;Sûr;
+CT-PAR-006;Brûle-encens en coffret;;Parfumerie & encens;Brûle-encens;;;;;3;5;À confirmer;
+CT-PAR-007;Brûle-encens céramique décoré;;Parfumerie & encens;Brûle-encens;;;;;2;5;À confirmer;
+CT-PAR-008;Coffret cadeau;;Parfumerie & encens;Coffrets cadeaux;;;;;3;4, 5;À confirmer;Contenu des boîtes roses à confirmer
+CT-MOD-001;Sandales femme dorées à strass;;Mode & accessoires;Chaussures;Pointures à lister;;;;2;4;Sûr;
+CT-MOD-002;Pochette de soirée dorée;;Mode & accessoires;Sacs & pochettes;;;;;2;4;Sûr;
+CT-MOD-003;Montre femme en coffret;;Mode & accessoires;Montres & bijoux;;;;;2;7;Sûr;Avec ou sans bracelet assorti ?
+CT-MOD-004;Casquette;;Mode & accessoires;Casquettes;Noir, Kaki;;;;3;5;Sûr;
+CT-MOD-005;Ensemble de nuit / nuisette femme;;Mode & accessoires;Vêtements de nuit;Tailles et couleurs à lister;;;;3;5;Sûr;
+CT-MOD-006;T-shirt / polo;;Mode & accessoires;Vêtements;Tailles à lister;;;;3;5;À confirmer;Articles blancs emballés
+CT-MOD-007;Voile / foulard noir;;Mode & accessoires;Vêtements;;;;;3;4;À confirmer;Paquets noirs sur l'étagère du milieu
+CT-MAI-001;Serviette / drap de bain;;Textile & maison;Linge de maison;Rose, Lilas, Blanc, Bleu;;;;3;4, 5;À confirmer;Serviettes ou draps ?
+CT-MAI-002;Tissu brodé / pagne;;Textile & maison;Tissus & pagnes;Motifs à lister;;;;2;4;À confirmer;
+CT-MAI-003;Brosse de nettoyage;;Textile & maison;Entretien;;;;;3;7;À confirmer;Brosses longues à rayures de couleur
