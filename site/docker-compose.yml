@@ -1,0 +1,15 @@
+# Base PostgreSQL locale pour le développement : `pnpm db:up`
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tima
+      POSTGRES_PASSWORD: tima
+      POSTGRES_DB: complexe_tima
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
