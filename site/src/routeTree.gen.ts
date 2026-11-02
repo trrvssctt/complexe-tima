@@ -17,12 +17,14 @@ import { Route as ListeFournituresRouteImport } from './routes/liste-fournitures
 import { Route as PanierRouteImport } from './routes/panier'
 import { Route as AccesCleRouteImport } from './routes/acces.$cle'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as MediasFichierRouteImport } from './routes/medias.$fichier'
 import { Route as ProduitSlugRouteImport } from './routes/produit.$slug'
 import { Route as RayonSlugRouteImport } from './routes/rayon.$slug'
 import { Route as AdminCommandesIndexRouteImport } from './routes/admin.commandes.index'
 import { Route as AdminCommandesNumeroRouteImport } from './routes/admin.commandes.$numero'
 import { Route as AdminProduitsIndexRouteImport } from './routes/admin.produits.index'
 import { Route as AdminProduitsIdRouteImport } from './routes/admin.produits.$id'
+import { Route as AdminProduitsNouveauRouteImport } from './routes/admin.produits.nouveau'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +66,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const MediasFichierRoute = MediasFichierRouteImport.update({
+  id: '/medias/$fichier',
+  path: '/medias/$fichier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProduitSlugRoute = ProduitSlugRouteImport.update({
   id: '/produit/$slug',
   path: '/produit/$slug',
@@ -94,6 +101,11 @@ const AdminProduitsIdRoute = AdminProduitsIdRouteImport.update({
   path: '/produits/$id',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProduitsNouveauRoute = AdminProduitsNouveauRouteImport.update({
+  id: '/produits/nouveau',
+  path: '/produits/nouveau',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,11 +115,13 @@ export interface FileRoutesByFullPath {
   '/liste-fournitures': typeof ListeFournituresRoute
   '/panier': typeof PanierRoute
   '/acces/$cle': typeof AccesCleRoute
+  '/medias/$fichier': typeof MediasFichierRoute
   '/produit/$slug': typeof ProduitSlugRoute
   '/rayon/$slug': typeof RayonSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/commandes/$numero': typeof AdminCommandesNumeroRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
+  '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
   '/admin/commandes/': typeof AdminCommandesIndexRoute
   '/admin/produits/': typeof AdminProduitsIndexRoute
 }
@@ -118,11 +132,13 @@ export interface FileRoutesByTo {
   '/liste-fournitures': typeof ListeFournituresRoute
   '/panier': typeof PanierRoute
   '/acces/$cle': typeof AccesCleRoute
+  '/medias/$fichier': typeof MediasFichierRoute
   '/produit/$slug': typeof ProduitSlugRoute
   '/rayon/$slug': typeof RayonSlugRoute
   '/admin': typeof AdminIndexRoute
   '/admin/commandes/$numero': typeof AdminCommandesNumeroRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
+  '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
   '/admin/commandes': typeof AdminCommandesIndexRoute
   '/admin/produits': typeof AdminProduitsIndexRoute
 }
@@ -135,11 +151,13 @@ export interface FileRoutesById {
   '/liste-fournitures': typeof ListeFournituresRoute
   '/panier': typeof PanierRoute
   '/acces/$cle': typeof AccesCleRoute
+  '/medias/$fichier': typeof MediasFichierRoute
   '/produit/$slug': typeof ProduitSlugRoute
   '/rayon/$slug': typeof RayonSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/commandes/$numero': typeof AdminCommandesNumeroRoute
   '/admin/produits/$id': typeof AdminProduitsIdRoute
+  '/admin/produits/nouveau': typeof AdminProduitsNouveauRoute
   '/admin/commandes/': typeof AdminCommandesIndexRoute
   '/admin/produits/': typeof AdminProduitsIndexRoute
 }
@@ -153,11 +171,13 @@ export interface FileRouteTypes {
     | '/liste-fournitures'
     | '/panier'
     | '/acces/$cle'
+    | '/medias/$fichier'
     | '/produit/$slug'
     | '/rayon/$slug'
     | '/admin/'
     | '/admin/commandes/$numero'
     | '/admin/produits/$id'
+    | '/admin/produits/nouveau'
     | '/admin/commandes/'
     | '/admin/produits/'
   fileRoutesByTo: FileRoutesByTo
@@ -168,11 +188,13 @@ export interface FileRouteTypes {
     | '/liste-fournitures'
     | '/panier'
     | '/acces/$cle'
+    | '/medias/$fichier'
     | '/produit/$slug'
     | '/rayon/$slug'
     | '/admin'
     | '/admin/commandes/$numero'
     | '/admin/produits/$id'
+    | '/admin/produits/nouveau'
     | '/admin/commandes'
     | '/admin/produits'
   id:
@@ -184,11 +206,13 @@ export interface FileRouteTypes {
     | '/liste-fournitures'
     | '/panier'
     | '/acces/$cle'
+    | '/medias/$fichier'
     | '/produit/$slug'
     | '/rayon/$slug'
     | '/admin/'
     | '/admin/commandes/$numero'
     | '/admin/produits/$id'
+    | '/admin/produits/nouveau'
     | '/admin/commandes/'
     | '/admin/produits/'
   fileRoutesById: FileRoutesById
@@ -201,6 +225,7 @@ export interface RootRouteChildren {
   ListeFournituresRoute: typeof ListeFournituresRoute
   PanierRoute: typeof PanierRoute
   AccesCleRoute: typeof AccesCleRoute
+  MediasFichierRoute: typeof MediasFichierRoute
   ProduitSlugRoute: typeof ProduitSlugRoute
   RayonSlugRoute: typeof RayonSlugRoute
 }
@@ -263,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/medias/$fichier': {
+      id: '/medias/$fichier'
+      path: '/medias/$fichier'
+      fullPath: '/medias/$fichier'
+      preLoaderRoute: typeof MediasFichierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/produit/$slug': {
       id: '/produit/$slug'
       path: '/produit/$slug'
@@ -305,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProduitsIdRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/produits/nouveau': {
+      id: '/admin/produits/nouveau'
+      path: '/produits/nouveau'
+      fullPath: '/admin/produits/nouveau'
+      preLoaderRoute: typeof AdminProduitsNouveauRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -312,6 +351,7 @@ interface AdminRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCommandesNumeroRoute: typeof AdminCommandesNumeroRoute
   AdminProduitsIdRoute: typeof AdminProduitsIdRoute
+  AdminProduitsNouveauRoute: typeof AdminProduitsNouveauRoute
   AdminCommandesIndexRoute: typeof AdminCommandesIndexRoute
   AdminProduitsIndexRoute: typeof AdminProduitsIndexRoute
 }
@@ -320,6 +360,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminCommandesNumeroRoute: AdminCommandesNumeroRoute,
   AdminProduitsIdRoute: AdminProduitsIdRoute,
+  AdminProduitsNouveauRoute: AdminProduitsNouveauRoute,
   AdminCommandesIndexRoute: AdminCommandesIndexRoute,
   AdminProduitsIndexRoute: AdminProduitsIndexRoute,
 }
@@ -334,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListeFournituresRoute: ListeFournituresRoute,
   PanierRoute: PanierRoute,
   AccesCleRoute: AccesCleRoute,
+  MediasFichierRoute: MediasFichierRoute,
   ProduitSlugRoute: ProduitSlugRoute,
   RayonSlugRoute: RayonSlugRoute,
 }

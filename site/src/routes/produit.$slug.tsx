@@ -10,7 +10,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useState } from "react";
-import { getCategory } from "@/data/catalogue";
+import { getCategory, variantPrice } from "@/data/catalogue";
 import { loadCatalogue, useCatalogue } from "@/lib/catalogue";
 import { CATEGORY_TEXT } from "@/components/shop/CategoryIcon";
 import { ProductCard } from "@/components/shop/ProductCard";
@@ -63,10 +63,12 @@ function ProductPage() {
   const { add } = useCart();
   const [variantSku, setVariantSku] = useState(product.variants[0]?.sku);
   const [qty, setQty] = useState(1);
+  const [photo, setPhoto] = useState(0);
+  const gallery = product.images ?? [];
 
   const variant = product.variants.find((v) => v.sku === variantSku);
   const sku = variant?.sku ?? product.id;
-  const price = variant ? (variant.price ?? product.price) : product.price;
+  const price = variantPrice(product, variant);
   const message = productQuestionMessage(product, variant?.label, qty);
   const related = useCatalogue().relatedProducts(product);
 
@@ -93,11 +95,36 @@ function ProductPage() {
           <div className="group overflow-hidden rounded-3xl border bg-card shadow-lift">
             <ProductImage
               product={product}
+              src={gallery[photo]}
               className="aspect-square"
               eager
               sizes="(min-width: 1024px) 50vw, 100vw"
             />
           </div>
+          {gallery.length > 1 && (
+            <div className="mt-3 grid grid-cols-5 gap-2">
+              {gallery.map((url, i) => (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => setPhoto(i)}
+                  aria-label={`Photo ${i + 1}`}
+                  aria-pressed={i === photo}
+                  className={cn(
+                    "overflow-hidden rounded-xl border bg-card",
+                    i === photo ? "ring-2 ring-ink" : "opacity-80 hover:opacity-100",
+                  )}
+                >
+                  <img
+                    src={url}
+                    alt=""
+                    loading="lazy"
+                    className="aspect-square w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Photo indicative · réf. {sku}
           </p>

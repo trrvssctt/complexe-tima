@@ -16,6 +16,7 @@ import {
 } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { adminUsers } from "@/server/db/schema";
+import { isAllowedImageUrl, saveUpload } from "@/server/media";
 
 /**
  * Fonctions serveur de l'espace boutique. Règle : chacune appelle requireAdmin() avant tout,
@@ -82,20 +83,38 @@ export const getAdminShell = createServerFn({ method: "GET" }).handler(async () 
   return { name: user.name, email: user.email, pendingOrders: await admin.pendingCount() };
 });
 
-// ─── Tableau de bord et commandes ────────────────────────────────────────────
+// ─── Tableau de bord ─────────────────────────────────────────────────────────
 
-export const getDashboard = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
-  return admin.dashboard();
-});
+const period = z.enum(Object.keys(admin.PERIODS) as [admin.Period, ...admin.Period[]]).catch("30j");
+
+export const getStats = createServerFn({ method: "GET" })
+  .validator((d: unknown) => z.object({ periode: period.optional() }).parse(d))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    return admin.stats(data.periode ?? "30j");
+  });
+
+// ─── Commandes ───────────────────────────────────────────────────────────────
 
 export const listOrders = createServerFn({ method: "GET" })
   .validator((d: unknown) =>
-    z.object({ statut: z.string().max(30).optional(), q: z.string().max(80).optional() }).parse(d),
+    z
+      .object({
+        statut: z.string().max(30).optional(),
+        q: z.string().max(80).optional(),
+        periode: z.string().max(10).optional(),
+        paiement: z.string().max(15).optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
     await requireAdmin();
-    return admin.listOrders({ status: data.statut, q: data.q });
+    return admin.listOrders({
+      status: data.statut,
+      q: data.q,
+      periode: data.periode,
+      paiement: data.paiement,
+    });
   });
 
 export const getOrder = createServerFn({ method: "GET" })
@@ -142,6 +161,50 @@ export const saveOrderNote = createServerFn({ method: "POST" })
     return true;
   });
 
+/** Montant ou quantité saisi : vide → null ; « 1 500 » → 1500. */
+const amount = z.preprocess((v) => {
+  const s = String(v ?? "").replace(/[\s\u00a0\u202f]/g, "");
+  return s === "" ? null : Number(s);
+}, z.number("Nombre entier attendu.").int("Nombre entier attendu.").min(0, "Pas de valeur négative.").max(100_000_000, "Montant trop élevé.").nullable());
+
+function firstErrors(issues: z.core.$ZodIssue[]) {
+  const out: Record<string, string> = {};
+  for (const i of issues) out[i.path.join(".")] ??= i.message;
+  return out;
+}
+
+export const updateOrderPricing = createServerFn({ method: "POST" })
+  .validator((d: unknown) => d)
+  .handler(
+    async ({
+      data,
+    }): Promise<{ ok: boolean; error?: string; fieldErrors?: Record<string, string> }> => {
+      const user = await requireAdmin();
+      const parsed = z
+        .object({
+          orderId,
+          deliveryFee: amount,
+          lines: z
+            .array(z.object({ itemId: z.number().int().positive(), unitPrice: amount }))
+            .max(100),
+        })
+        .safeParse(data);
+      if (!parsed.success)
+        return {
+          ok: false,
+          error: "Vérifiez les montants.",
+          fieldErrors: firstErrors(parsed.error.issues),
+        };
+      const res = await admin.updateOrderPricing(
+        parsed.data.orderId,
+        parsed.data.lines,
+        parsed.data.deliveryFee ?? 0,
+        user.name,
+      );
+      return res.error ? { ok: false, error: res.error } : { ok: true };
+    },
+  );
+
 // ─── Produits ────────────────────────────────────────────────────────────────
 
 export const listProducts = createServerFn({ method: "GET" })
@@ -168,6 +231,11 @@ export const getProduct = createServerFn({ method: "GET" })
     return product;
   });
 
+export const getProductFormOptions = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  return admin.productFormOptions();
+});
+
 export const setProductVisibility = createServerFn({ method: "POST" })
   .validator((d: unknown) =>
     z.object({ id: z.number().int().positive(), visible: z.boolean() }).parse(d),
@@ -178,80 +246,120 @@ export const setProductVisibility = createServerFn({ method: "POST" })
     return true;
   });
 
-/** Montant ou quantité saisi : vide → null ; « 1 500 » → 1500. */
-const amount = z.preprocess((v) => {
-  const s = String(v ?? "").replace(/[\s\u00a0\u202f]/g, "");
-  return s === "" ? null : Number(s);
-}, z.number("Nombre entier attendu.").int("Nombre entier attendu.").min(0, "Pas de valeur négative.").max(100_000_000).nullable());
 const text = (max: number) =>
   z
     .string()
     .trim()
-    .max(max)
+    .max(max, `${max} caractères maximum.`)
     .transform((s) => s || null);
 
-const productSchema = z.object({
-  id: z.number().int().positive(),
-  name: z.string().trim().min(2, "Nom trop court.").max(150, "Nom trop long."),
-  description: text(3000),
-  brand: text(80),
-  categoryId: z.number().int().positive().nullable(),
-  optionsNote: text(200),
-  visible: z.boolean(),
-  featured: z.boolean(),
-  giftIdea: z.boolean(),
-  needsReview: z.boolean(),
-  internalNote: text(2000),
-  variants: z
-    .array(
-      z.object({
-        id: z.number().int().positive(),
-        price: z.unknown(),
-        stock: z.unknown(),
-        lowStockThreshold: z.unknown(),
-        active: z.boolean(),
-      }),
-    )
-    .max(50),
-});
+const productSchema = z
+  .object({
+    id: z.number().int().positive().optional(),
+    name: z.string().trim().min(2, "Nom trop court.").max(150, "Nom trop long."),
+    description: text(3000),
+    brand: text(80),
+    universeSlug: z.string().max(40),
+    categoryId: z.number().int().positive().nullable(),
+    newCategory: text(60),
+    optionName: z.string().trim().min(1).max(30).catch("Couleur"),
+    optionsNote: text(200),
+    visible: z.boolean(),
+    featured: z.boolean(),
+    giftIdea: z.boolean(),
+    needsReview: z.boolean(),
+    internalNote: text(2000),
+    images: z
+      .array(
+        z
+          .string()
+          .trim()
+          .refine(isAllowedImageUrl, "Adresse de photo invalide (https ou photo envoyée)."),
+      )
+      .max(10, "10 photos maximum."),
+    variants: z
+      .array(
+        z.object({
+          id: z.number().int().positive().optional(),
+          label: z.string().trim().max(60, "Libellé trop long."),
+          price: amount,
+          purchasePrice: amount,
+          stock: amount,
+          lowStockThreshold: amount,
+          active: z.boolean(),
+        }),
+      )
+      .min(1, "Au moins un article.")
+      .max(40),
+  })
+  .superRefine((p, ctx) => {
+    const named = p.variants.length > 1;
+    p.variants.forEach((v, i) => {
+      if (named && !v.label)
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants", i, "label"],
+          message: "Nom de la variante requis.",
+        });
+    });
+    const labels = p.variants.map((v) => v.label.toLowerCase()).filter(Boolean);
+    if (new Set(labels).size !== labels.length)
+      ctx.addIssue({
+        code: "custom",
+        path: ["variants"],
+        message: "Deux variantes portent le même nom.",
+      });
+  });
 
+type SaveResult = {
+  ok: boolean;
+  id?: number;
+  error?: string;
+  fieldErrors?: Record<string, string>;
+};
+
+/** Création (sans id) ou modification (avec id) d'un produit, de ses variantes et de ses photos. */
 export const saveProduct = createServerFn({ method: "POST" })
   .validator((d: unknown) => d)
-  .handler(
-    async ({
-      data,
-    }): Promise<{ ok: boolean; error?: string; fieldErrors?: Record<string, string> }> => {
-      await requireAdmin();
-      const parsed = productSchema.safeParse(data);
-      if (!parsed.success) {
-        const fieldErrors: Record<string, string> = {};
-        for (const i of parsed.error.issues) fieldErrors[String(i.path[0])] ??= i.message;
-        return { ok: false, error: "Vérifiez les champs signalés.", fieldErrors };
-      }
-      // Prix, stock et seuil : validés un par un pour signaler précisément le champ fautif
-      const fieldErrors: Record<string, string> = {};
-      const variants = parsed.data.variants.flatMap((v) => {
-        const price = amount.safeParse(v.price);
-        const stock = amount.safeParse(v.stock);
-        const threshold = amount.safeParse(v.lowStockThreshold);
-        if (!price.success) fieldErrors[`v-${v.id}-price`] = price.error.issues[0]!.message;
-        if (!stock.success) fieldErrors[`v-${v.id}-stock`] = stock.error.issues[0]!.message;
-        if (!threshold.success)
-          fieldErrors[`v-${v.id}-threshold`] = threshold.error.issues[0]!.message;
-        if (!price.success || !stock.success || !threshold.success) return [];
-        return [
-          {
-            id: v.id,
-            price: price.data,
-            stock: stock.data ?? 0,
-            lowStockThreshold: threshold.data ?? 3,
-            active: v.active,
-          },
-        ];
-      });
-      if (Object.keys(fieldErrors).length)
-        return { ok: false, error: "Vérifiez les champs signalés.", fieldErrors };
-      const res = await admin.updateProduct({ ...parsed.data, variants });
-      return res.error ? { ok: false, ...res } : { ok: true };
-    },
-  );
+  .handler(async ({ data }): Promise<SaveResult> => {
+    const user = await requireAdmin();
+    const parsed = productSchema.safeParse(data);
+    if (!parsed.success)
+      return {
+        ok: false,
+        error: "Vérifiez les champs signalés.",
+        fieldErrors: firstErrors(parsed.error.issues),
+      };
+    const { id, ...p } = parsed.data;
+    const input = {
+      ...p,
+      variants: p.variants.map((v) => ({
+        id: v.id,
+        label: v.label,
+        price: v.price,
+        purchasePrice: v.purchasePrice,
+        stock: v.stock ?? 0,
+        lowStockThreshold: v.lowStockThreshold ?? 3,
+        active: v.active,
+      })),
+    };
+    const res: { id?: number; error?: string } = id
+      ? await admin.updateProduct(id, input)
+      : await admin.createProduct(input, user.name);
+    if (res.error) return { ok: false, error: res.error };
+    const savedId = res.id ?? id;
+    return savedId ? { ok: true, id: savedId } : { ok: true };
+  });
+
+/** Envoi d'une photo (JPEG, PNG, WebP, AVIF ; 5 Mo max). Renvoie son adresse /medias/… */
+export const uploadProductImage = createServerFn({ method: "POST" })
+  .validator((d: unknown) => {
+    if (!(d instanceof FormData)) throw new Error("Formulaire attendu.");
+    return d;
+  })
+  .handler(async ({ data }): Promise<{ url?: string; error?: string }> => {
+    await requireAdmin();
+    const file = data.get("file");
+    if (!(file instanceof File)) return { error: "Aucun fichier reçu." };
+    return saveUpload(file);
+  });

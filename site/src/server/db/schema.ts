@@ -283,6 +283,8 @@ export const orderItems = pgTable(
     label: text().notNull(),
     options: jsonb().$type<Record<string, string>>().notNull().default({}),
     unitPrice: integer(), // null = prix sur demande
+    /** Prix d'achat unitaire au moment de la commande (statistiques de marge). */
+    unitCost: integer(),
     quantity: integer().notNull(),
     lineTotal: integer(),
   },

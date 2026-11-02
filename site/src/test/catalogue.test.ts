@@ -56,3 +56,43 @@ describe("Commande WhatsApp", () => {
     expect(msg).toContain("Paiement : Wave");
   });
 });
+
+describe("Prix des variantes", () => {
+  it("une variante sans prix reste « sur demande » si d'autres variantes ont un prix", () => {
+    const products = [
+      {
+        id: "CT-T-001",
+        slug: "t",
+        name: "Test",
+        category: "parfumerie" as const,
+        subcategory: "Parfums",
+        description: "",
+        price: 10000,
+        variants: [
+          { sku: "CT-T-001-A", label: "50 ml", price: 10000 },
+          { sku: "CT-T-001-B", label: "100 ml" },
+        ],
+      },
+    ];
+    const cat = createCatalogue(products);
+    expect(cat.unitPrice("CT-T-001-A")).toBe(10000);
+    expect(cat.unitPrice("CT-T-001-B")).toBeUndefined();
+    expect(cartTotal(cat, [{ sku: "CT-T-001-B", qty: 1 }])).toBeUndefined();
+  });
+
+  it("sans aucun prix de variante, le prix du produit s'applique", () => {
+    const cat = createCatalogue([
+      {
+        id: "CT-T-002",
+        slug: "t2",
+        name: "Test 2",
+        category: "mode" as const,
+        subcategory: "Casquettes",
+        description: "",
+        price: 3000,
+        variants: [{ sku: "CT-T-002-NOIR", label: "Noir" }],
+      },
+    ]);
+    expect(cat.unitPrice("CT-T-002-NOIR")).toBe(3000);
+  });
+});

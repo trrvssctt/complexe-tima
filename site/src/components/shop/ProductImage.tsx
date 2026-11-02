@@ -8,13 +8,17 @@ export function ProductImage({
   className,
   eager,
   sizes = "(min-width: 1024px) 25vw, 50vw",
+  src: override,
 }: {
   product: Product;
   className?: string;
   eager?: boolean;
   sizes?: string;
+  /** Photo à afficher (galerie de la fiche produit) ; par défaut la principale. */
+  src?: string | undefined;
 }) {
-  const src = productImage(product.id);
+  // Photo ajoutée dans l'espace boutique, sinon photo d'origine du dossier assets
+  const src = override ?? product.images?.[0] ?? productImage(product.id);
   return (
     <div className={cn("relative overflow-hidden bg-photo", className)}>
       {src ? (

@@ -33,3 +33,6 @@ dist-ssr
 
 # Secrets
 .env
+
+# Photos envoyées depuis l’espace boutique (UPLOAD_DIR)
+uploads/

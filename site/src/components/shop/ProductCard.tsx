@@ -19,6 +19,9 @@ export function ProductCard({
 }) {
   const { add } = useCart();
   const hasVariants = product.variants.length > 0;
+  // Variantes à prix différents (ou certaines sur demande) : prix « Dès … »
+  const priceVaries =
+    product.variants.length > 1 && new Set(product.variants.map((v) => v.price)).size > 1;
   const cat = getCategory(product.category);
 
   return (
@@ -83,7 +86,9 @@ export function ProductCard({
               product.price != null ? "text-lg text-gold-deep" : "text-sm text-muted-foreground",
             )}
           >
-            {formatPrice(product.price)}
+            {priceVaries && product.price != null
+              ? `Dès ${formatPrice(product.price)}`
+              : formatPrice(product.price)}
           </span>
           {hasVariants ? (
             <Link

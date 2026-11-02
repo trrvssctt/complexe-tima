@@ -8,7 +8,7 @@ import {
   type Variant,
 } from "@/data/catalogue";
 import { db } from "./db";
-import { categories, products, productVariants, universes } from "./db/schema";
+import { categories, productImages, products, productVariants, universes } from "./db/schema";
 
 /**
  * Catalogue lu en base, au format attendu par le site (type Product).
@@ -50,6 +50,14 @@ async function queryCatalogue(): Promise<Product[]> {
         .orderBy(asc(productVariants.position))
     : [];
 
+  const images = ids.length
+    ? await db
+        .select({ productId: productImages.productId, url: productImages.url })
+        .from(productImages)
+        .where(inArray(productImages.productId, ids))
+        .orderBy(asc(productImages.position), asc(productImages.id))
+    : [];
+
   const out: Product[] = [];
   for (const { product: p, universeSlug, subcategory } of rows) {
     if (!SLUGS.has(universeSlug)) continue;
@@ -64,6 +72,7 @@ async function queryCatalogue(): Promise<Product[]> {
           ...(v.swatch ? { swatch: v.swatch as SwatchKey } : {}),
           ...(v.price !== null ? { price: v.price } : {}),
         }));
+    const urls = images.filter((i) => i.productId === p.id).map((i) => i.url);
     const prices = vs.map((v) => v.price).filter((x): x is number => x !== null);
     const price = single ? single.price : prices.length ? Math.min(...prices) : null;
     out.push({
@@ -77,6 +86,7 @@ async function queryCatalogue(): Promise<Product[]> {
       variants: mapped,
       ...(p.optionsNote ? { options: p.optionsNote } : {}),
       ...(price !== null ? { price } : {}),
+      ...(urls.length ? { images: urls } : {}),
       ...(p.featured ? { featured: true } : {}),
       ...(p.giftIdea ? { giftIdea: true } : {}),
     });

@@ -2,8 +2,11 @@
  * Synchronise la base avec le catalogue de référence (src/data/catalogue.ts) :
  * rayons, sous-catégories, produits, variantes.
  *
- *   pnpm catalogue:sync              complète ce qui manque, sans écraser l'espace boutique
- *   pnpm catalogue:sync --textes     reprend aussi noms, marques et descriptions du catalogue
+ *   pnpm catalogue:sync              AJOUTE seulement ce qui manque (produits, variantes, marques et
+ *                                    descriptions vides) : rien de ce qui est réglé dans l'espace
+ *                                    boutique n'est modifié.
+ *   pnpm catalogue:sync --textes     réaligne TOUT sur le catalogue (noms, descriptions, sous-catégories,
+ *                                    mises en avant, variantes actives) : à réserver à la migration initiale.
  *   pnpm catalogue:sync --publier    met tous les produits du catalogue en ligne
  *
  * Ne touche jamais aux prix, stocks et seuils (espace boutique ou import XLSX).
@@ -115,11 +118,12 @@ async function main() {
     const seedSkus = SEED_PRODUCTS.map((p) => p.id);
     const existing = await tx.select().from(products).where(inArray(products.sku, seedSkus));
     const bySku = new Map(existing.map((p) => [p.sku, p]));
-    for (const p of existing)
-      await tx
-        .update(products)
-        .set({ slug: `tmp-${p.id}` })
-        .where(eq(products.id, p.id));
+    if (OVERWRITE_TEXTS)
+      for (const p of existing)
+        await tx
+          .update(products)
+          .set({ slug: `tmp-${p.id}` })
+          .where(eq(products.id, p.id));
 
     for (const seed of SEED_PRODUCTS) {
       const hasVariants = seed.variants.length > 0;
@@ -156,14 +160,22 @@ async function main() {
         productId = current.id;
         await tx
           .update(products)
-          .set({
-            ...always,
-            name: OVERWRITE_TEXTS ? seed.name : current.name,
-            brand: OVERWRITE_TEXTS || !current.brand ? (seed.brand ?? null) : current.brand,
-            description:
-              OVERWRITE_TEXTS || !current.description ? seed.description : current.description,
-            ...(PUBLISH ? { visible: true } : {}),
-          })
+          .set(
+            OVERWRITE_TEXTS
+              ? {
+                  ...always,
+                  name: seed.name,
+                  brand: seed.brand ?? null,
+                  description: seed.description,
+                  ...(PUBLISH ? { visible: true } : {}),
+                }
+              : {
+                  // Mode par défaut : on complète seulement les champs vides
+                  brand: current.brand ?? seed.brand ?? null,
+                  description: current.description || seed.description,
+                  ...(PUBLISH ? { visible: true } : {}),
+                },
+          )
           .where(eq(products.id, productId));
         stats.productsUpdated++;
       }
@@ -182,6 +194,7 @@ async function main() {
           .select({ id: productVariants.id })
           .from(productVariants)
           .where(eq(productVariants.sku, v.sku));
+        if (row && !OVERWRITE_TEXTS) continue; // variante existante : réglée dans l'espace boutique
         if (row) {
           await tx
             .update(productVariants)
@@ -198,7 +211,9 @@ async function main() {
           stats.variantsCreated++;
         }
       }
-      // Articles en base qui ne sont plus au catalogue : désactivés (jamais supprimés : commandes passées)
+      // Articles en base absents du catalogue : désactivés (jamais supprimés : commandes passées).
+      // Uniquement en réalignement complet : les variantes ajoutées dans l'espace boutique sont gardées.
+      if (!OVERWRITE_TEXTS) continue;
       const disabled = await tx
         .update(productVariants)
         .set({ active: false })

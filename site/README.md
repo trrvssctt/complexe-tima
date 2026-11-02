@@ -14,7 +14,7 @@ pnpm install
 cp .env.example .env        # puis renseigner ADMIN_LOGIN_KEY et SESSION_SECRET
 pnpm db:up                  # PostgreSQL 16 dans Docker (port 5433)
 pnpm db:migrate
-pnpm catalogue:sync --textes --publier   # remplit la base depuis src/data/catalogue.ts (une fois)
+pnpm catalogue:sync --textes --publier   # remplit la base depuis src/data/catalogue.ts (une seule fois)
 pnpm dev                    # http://localhost:3000
 ```
 
@@ -26,12 +26,26 @@ Production : `pnpm build` puis `node --env-file=.env .output/server/index.mjs` (
 - **La base fait foi** : prix, stock, visibilité, descriptions modifiées dans l'espace boutique.
   Le site la lit via `getCatalogue` (`src/functions/catalogue.ts`), puis `useCatalogue()` dans les pages.
 - `src/data/catalogue.ts` : rayons, packs et **textes de référence** des produits (`SEED_PRODUCTS`).
-  `pnpm catalogue:sync` les reporte en base sans écraser l'espace boutique (`--textes` pour reprendre
-  noms et descriptions, `--publier` pour tout mettre en ligne). Jamais de prix ni de stock.
+  `pnpm catalogue:sync` **ajoute seulement ce qui manque** (rien de ce qui est réglé dans l'espace boutique
+  n'est modifié). `--textes` réaligne tout sur le catalogue (migration initiale uniquement), `--publier`
+  met tout en ligne. Jamais de prix ni de stock.
 - Photos : `src/assets/products/<sku-parent-en-minuscules>.jpg` (ajouter une photo ne demande aucun code).
 - Prix et stocks en masse : `pnpm catalogue:import fichier.xlsx [--dry-run]`
   (fichier `catalogue_complexe_tima_a_remplir.xlsx`, une case vide ne change rien).
 - Sans prix : « Prix sur demande ». L'article reste commandable ; le total est confirmé sur WhatsApp.
+
+## Photos
+
+Ajoutées dans l'espace boutique : envoi de fichier (JPEG, PNG, WebP, AVIF, 5 Mo max, format vérifié sur
+le contenu) ou adresse https. Fichiers rangés dans `UPLOAD_DIR` (hors du dossier de l'application en
+production), servis par `/medias/<fichier>`. Sans photo ajoutée : photo d'origine de `src/assets/products/`.
+
+## Statistiques
+
+Tableau de bord : chiffre d'affaires, coûts d'achat, marge brute, panier moyen, ventes par jour/mois,
+meilleures ventes, valeur du stock. Le prix d'achat est **figé dans chaque ligne de commande**
+(`order_items.unit_cost`) : modifier un prix d'achat ne change pas les marges passées. Les commandes
+« prix sur demande » comptent une fois leurs prix fixés dans la fiche commande.
 
 ## Commandes
 

@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, MessageCircle, Pencil } from "lucide-react";
 import { useState } from "react";
-import { Alert, StatusBadge, adminCard } from "@/components/admin/ui";
+import { Alert, FieldError, StatusBadge, adminCard, adminInput } from "@/components/admin/ui";
 import {
   advanceOrder,
   cancelOrder,
   getOrder,
   markOrderPaid,
   saveOrderNote,
+  updateOrderPricing,
 } from "@/functions/admin";
 import {
   FULFILLMENT,
@@ -70,6 +71,7 @@ function OrderPage() {
         : `Commande reçue (${label(e.toValue)})`;
     if (e.type === "paiement") return "Paiement confirmé";
     if (e.type === "note") return "Note interne modifiée";
+    if (e.type === "prix") return "Prix et livraison mis à jour";
     return e.type;
   };
 
@@ -139,48 +141,7 @@ function OrderPage() {
 
       <div className="grid items-start gap-6 lg:grid-cols-[3fr_2fr]">
         <div className="flex flex-col gap-6">
-          <section className={adminCard}>
-            <h2 className="mb-3 text-2xl font-bold">Articles</h2>
-            <ul className="divide-y">
-              {order.items.map(({ item, productId }) => (
-                <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
-                  <div className="min-w-0 flex-1">
-                    {productId ? (
-                      <Link
-                        to="/admin/produits/$id"
-                        params={{ id: String(productId) }}
-                        className="font-semibold underline"
-                      >
-                        {item.label}
-                      </Link>
-                    ) : (
-                      <span className="font-semibold">{item.label}</span>
-                    )}
-                    <p className="text-sm text-muted-foreground">
-                      {[
-                        ...Object.values(item.options),
-                        item.unitPrice != null ? formatPrice(item.unitPrice) : "Prix sur demande",
-                        item.sku,
-                      ].join(" · ")}
-                    </p>
-                  </div>
-                  <span className="w-12 text-right tabular-nums">× {item.quantity}</span>
-                  <span className="w-32 text-right font-semibold tabular-nums">
-                    {item.lineTotal != null ? formatPrice(item.lineTotal) : "À confirmer"}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="gold-rule my-4" />
-            <div className="flex items-baseline justify-between text-lg">
-              <span className="font-semibold">
-                Total{order.fulfillment === "livraison" ? " (hors livraison)" : ""}
-              </span>
-              <span className="font-bold text-gold-deep tabular-nums">
-                {order.total != null ? formatPrice(order.total) : "Prix à confirmer"}
-              </span>
-            </div>
-          </section>
+          <ItemsSection order={order} onSaved={() => router.invalidate()} />
 
           <section className={adminCard}>
             <h2 className="mb-3 text-2xl font-bold">Notes internes</h2>
@@ -301,5 +262,215 @@ function OrderPage() {
         </div>
       </div>
     </>
+  );
+}
+
+type Order = Awaited<ReturnType<typeof getOrder>>;
+
+/** Articles, coûts et marge ; fixation des prix sur demande et des frais de livraison. */
+function ItemsSection({ order, onSaved }: { order: Order; onSaved: () => Promise<void> }) {
+  const editable = order.status !== "annulee";
+  const unpriced = order.items.some(({ item }) => item.unitPrice == null);
+  const [editing, setEditing] = useState(editable && unpriced);
+  const [prices, setPrices] = useState<Record<number, string>>(() =>
+    Object.fromEntries(
+      order.items.map(({ item }) => [
+        item.id,
+        item.unitPrice == null ? "" : String(item.unitPrice),
+      ]),
+    ),
+  );
+  const [fee, setFee] = useState(String(order.deliveryFee ?? 0));
+  const [pending, setPending] = useState(false);
+  const [result, setResult] = useState<{ error?: string; fieldErrors?: Record<string, string> }>(
+    {},
+  );
+
+  const known = order.items.filter(({ item }) => item.lineTotal != null);
+  const cost = known.reduce((s, { item }) => s + (item.unitCost ?? 0) * item.quantity, 0);
+  const costedRevenue = known
+    .filter(({ item }) => item.unitCost != null)
+    .reduce((s, { item }) => s + item.lineTotal!, 0);
+  const margin = costedRevenue - cost;
+
+  async function save() {
+    setPending(true);
+    setResult({});
+    try {
+      const res = await updateOrderPricing({
+        data: {
+          orderId: order.id,
+          deliveryFee: fee,
+          lines: order.items.map(({ item }) => ({
+            itemId: item.id,
+            unitPrice: prices[item.id] ?? "",
+          })),
+        },
+      });
+      if (res.ok) {
+        setEditing(false);
+        await onSaved();
+      } else setResult(res);
+    } catch {
+      setResult({ error: "Enregistrement impossible. Réessayez." });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <section className={adminCard}>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-2xl font-bold">Articles</h2>
+        {editable && !editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-deep underline"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Modifier les prix
+          </button>
+        )}
+      </div>
+      {editing && unpriced && (
+        <p className="mb-3 rounded-xl bg-sand px-3 py-2 text-sm">
+          Fixez les prix confirmés au client sur WhatsApp : le total et les statistiques seront mis
+          à jour.
+        </p>
+      )}
+      {result.error && <Alert tone="error">{result.error}</Alert>}
+      <ul className="divide-y">
+        {order.items.map(({ item, productId }, i) => (
+          <li key={item.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+            <div className="min-w-0 flex-1 basis-56">
+              {productId ? (
+                <Link
+                  to="/admin/produits/$id"
+                  params={{ id: String(productId) }}
+                  className="font-semibold underline"
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <span className="font-semibold">{item.label}</span>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {[
+                  ...Object.values(item.options),
+                  item.sku,
+                  item.unitCost != null ? `achat ${formatPrice(item.unitCost)}` : "achat inconnu",
+                ].join(" · ")}
+              </p>
+            </div>
+            <span className="w-10 text-right tabular-nums">× {item.quantity}</span>
+            {editing ? (
+              <span className="w-40">
+                <label htmlFor={`price-${item.id}`} className="sr-only">
+                  Prix unitaire de {item.label}
+                </label>
+                <input
+                  id={`price-${item.id}`}
+                  inputMode="numeric"
+                  value={prices[item.id] ?? ""}
+                  onChange={(e) => setPrices((p) => ({ ...p, [item.id]: e.target.value }))}
+                  placeholder="Prix unitaire"
+                  aria-invalid={!!result.fieldErrors?.[`lines.${i}.unitPrice`]}
+                  className={cn(adminInput, "h-10 text-right")}
+                />
+                <FieldError message={result.fieldErrors?.[`lines.${i}.unitPrice`]} />
+              </span>
+            ) : (
+              <span className="w-40 text-right">
+                <span className="block font-semibold tabular-nums">
+                  {item.lineTotal != null ? formatPrice(item.lineTotal) : "À confirmer"}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {item.unitPrice != null
+                    ? `${formatPrice(item.unitPrice)} l’unité`
+                    : "Prix sur demande"}
+                </span>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+      <div className="gold-rule my-4" />
+      <dl className="space-y-2 text-sm">
+        <div className="flex items-center justify-between gap-3">
+          <dt>Sous-total</dt>
+          <dd className="tabular-nums">
+            {order.subtotal != null ? formatPrice(order.subtotal) : "À confirmer"}
+          </dd>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <dt>Livraison</dt>
+          <dd>
+            {editing ? (
+              <span className="block w-40">
+                <label htmlFor="fee" className="sr-only">
+                  Frais de livraison
+                </label>
+                <input
+                  id="fee"
+                  inputMode="numeric"
+                  value={fee}
+                  onChange={(e) => setFee(e.target.value)}
+                  aria-invalid={!!result.fieldErrors?.["deliveryFee"]}
+                  className={cn(adminInput, "h-10 text-right")}
+                />
+                <FieldError message={result.fieldErrors?.["deliveryFee"]} />
+              </span>
+            ) : (
+              <span className="tabular-nums">
+                {order.fulfillment === "retrait" && !order.deliveryFee
+                  ? "Retrait (gratuit)"
+                  : formatPrice(order.deliveryFee)}
+              </span>
+            )}
+          </dd>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 text-lg">
+          <dt className="font-semibold">Total</dt>
+          <dd className="font-bold text-gold-deep tabular-nums">
+            {order.total != null ? formatPrice(order.total) : "Prix à confirmer"}
+          </dd>
+        </div>
+        {known.length > 0 && cost > 0 && (
+          <div className="flex justify-between gap-3 text-muted-foreground">
+            <dt>Coût d’achat · marge</dt>
+            <dd className="tabular-nums">
+              {formatPrice(cost)} ·{" "}
+              <span
+                className={
+                  margin >= 0 ? "font-semibold text-whatsapp" : "font-semibold text-destructive"
+                }
+              >
+                {formatPrice(margin)}
+              </span>
+            </dd>
+          </div>
+        )}
+      </dl>
+      {editing && (
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={save}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground shadow-gold disabled:opacity-70"
+          >
+            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Enregistrer les prix
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="h-11 px-3 text-sm text-muted-foreground underline"
+          >
+            Annuler
+          </button>
+        </div>
+      )}
+    </section>
   );
 }

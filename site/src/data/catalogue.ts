@@ -36,6 +36,8 @@ export interface Product {
   /** Choix à préciser à la commande (teintes, pointures, tailles...). */
   options?: string;
   price?: number;
+  /** Photos ajoutées dans l'espace boutique (la première est la principale). Sinon : photo du dossier assets. */
+  images?: string[];
   featured?: boolean;
   giftIdea?: boolean;
 }
@@ -799,6 +801,17 @@ export const PACKS: Pack[] = [
 
 // ───────── Helpers ─────────
 
+/**
+ * Prix d'un article. Une variante a son propre prix ; elle ne reprend le prix du produit que si
+ * AUCUNE variante n'a de prix (catalogue de référence, prix au niveau du produit).
+ * Une variante sans prix alors que d'autres en ont un reste « Prix sur demande ».
+ */
+export function variantPrice(product: Product, variant?: Variant): number | undefined {
+  if (!variant) return product.price;
+  if (variant.price != null) return variant.price;
+  return product.variants.some((v) => v.price != null) ? undefined : product.price;
+}
+
 export function getCategory(slug: string) {
   return CATEGORIES.find((cat) => cat.slug === slug);
 }
@@ -834,7 +847,7 @@ export function createCatalogue(products: Product[]) {
     /** Prix unitaire d'un SKU : celui de la variante, sinon celui du produit. */
     unitPrice: (sku: string) => {
       const found = findBySku(sku);
-      return found?.variant?.price ?? found?.product.price;
+      return found ? variantPrice(found.product, found.variant) : undefined;
     },
     searchProducts: (query: string) => {
       const q = normalize(query.trim());

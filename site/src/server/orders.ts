@@ -108,7 +108,12 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   }
 
   const variants = await db
-    .select({ id: productVariants.id, sku: productVariants.sku, options: productVariants.options })
+    .select({
+      id: productVariants.id,
+      sku: productVariants.sku,
+      options: productVariants.options,
+      purchasePrice: productVariants.purchasePrice,
+    })
     .from(productVariants)
     .where(
       inArray(
@@ -128,6 +133,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       label: product.name,
       options: v?.options ?? {},
       unitPrice,
+      unitCost: v?.purchasePrice ?? null, // prix d'achat figé au moment de la commande
       quantity: l.qty,
       lineTotal: unitPrice === null ? null : unitPrice * l.qty,
     };
